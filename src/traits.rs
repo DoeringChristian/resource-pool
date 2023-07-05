@@ -1,9 +1,7 @@
 use std::ops::{Deref, DerefMut};
 
-pub trait Lease<R: Resource>: Deref<Target = R> + DerefMut<Target = R> {}
-
 pub trait Pool<R: Resource> {
-    type Lease: Lease<R>;
+    type Lease: Deref<Target = R> + DerefMut<Target = R>;
 
     /// Leases a resource from the pool
     ///

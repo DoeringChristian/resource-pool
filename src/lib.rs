@@ -1,5 +1,5 @@
 pub mod hashpool;
-mod traits;
+pub mod traits;
 
 #[cfg(test)]
 mod test;

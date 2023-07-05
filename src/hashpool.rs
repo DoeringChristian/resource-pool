@@ -29,8 +29,6 @@ impl<R: Resource> Drop for Lease<R> {
     }
 }
 
-impl<R: Resource> crate::traits::Lease<R> for Lease<R> {}
-
 impl<R: Resource> Deref for Lease<R> {
     type Target = R;
 
