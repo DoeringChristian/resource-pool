@@ -12,6 +12,14 @@ pub struct Lease<R: Resource> {
     resource: Option<R>,
     cache: Cache<R>,
 }
+impl<R: Resource + Debug> Debug for Lease<R> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Lease")
+            .field("resource", &self.resource)
+            .field("cache", &self.cache)
+            .finish()
+    }
+}
 
 impl<R: Resource> Drop for Lease<R> {
     fn drop(&mut self) {
