@@ -4,7 +4,7 @@ use std::hash::Hash;
 use std::ops::{Deref, DerefMut};
 use std::sync::{Arc, Mutex};
 
-use crate::traits::{Pool, Resource};
+pub use crate::traits::*;
 
 type Cache<R> = Arc<Mutex<Vec<R>>>;
 
