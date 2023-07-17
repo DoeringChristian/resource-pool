@@ -27,7 +27,7 @@ impl Resource for Buffer {
 
 #[test]
 fn hash_pool_lease() {
-    let mut pool = HashPool::<Buffer>::default();
+    let mut pool = hashpool::HashPool::<Buffer>::default();
 
     let b1 = pool.lease(&BufferInfo { cap: 10 }, &());
 
