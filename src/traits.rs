@@ -1,5 +1,4 @@
 use std::error::Error;
-use std::ops::{Deref, DerefMut};
 
 pub trait Pool<R: Resource> {
     type Lease;
