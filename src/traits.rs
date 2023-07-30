@@ -1,5 +1,4 @@
 use std::error::Error;
-use std::ops::{Deref, DerefMut};
 
 pub trait Pool<R: Resource> {
     type Lease;
@@ -17,6 +16,12 @@ pub trait TryPool<R: TryResource>: Pool<R> {
 pub trait Resource {
     type Info: Eq + PartialEq + Clone;
     type Context;
+    ///
+    /// The weak form of a `Resource` is the form how it should be stored in the pool.
+    /// For example, if it would hold a reference counting pointer (`Rc` or `Arc`) to the pool this
+    /// could be replaced by a `Weak` pointer.
+    ///
+    type WeakForm;
 
     /// Creates a resource with the specified creation info.
     ///
@@ -24,9 +29,14 @@ pub trait Resource {
     /// * `ctx`: context such as a vulkan device used to create the resource
     fn create(info: &Self::Info, ctx: &Self::Context) -> Self;
 
-    /// Clears the resource, to drop its content.
+    /// Clears the resource to drop it's content and returns the weak form.
     /// For a vector this should call `Vec::clear()`.
-    fn clear(&mut self);
+    fn clear(self) -> Self::WeakForm;
+
+    ///
+    /// Upgrades a resource from its `WeakForm`.
+    ///
+    fn upgrade(weak: Self::WeakForm, info: &Self::Info, ctx: &Self::Context) -> Self;
 }
 
 pub trait TryResource: Resource + Sized {

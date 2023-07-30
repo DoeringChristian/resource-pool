@@ -11,8 +11,8 @@ struct BufferInfo {
 
 impl Resource for Buffer {
     type Info = BufferInfo;
-
     type Context = ();
+    type WeakForm = Self;
 
     fn create(info: &Self::Info, ctx: &Self::Context) -> Self {
         Buffer {
@@ -20,8 +20,13 @@ impl Resource for Buffer {
         }
     }
 
-    fn clear(&mut self) {
+    fn clear(mut self) -> Self::WeakForm {
         self.data.clear();
+        self
+    }
+
+    fn upgrade(weak: Self::WeakForm, info: &Self::Info, ctx: &Self::Context) -> Self {
+        weak
     }
 }
 

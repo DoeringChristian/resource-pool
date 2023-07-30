@@ -10,9 +10,9 @@ type Cache<R> = Arc<Mutex<Vec<R>>>;
 
 pub struct Lease<R: Resource> {
     resource: Option<R>,
-    cache: Cache<R>,
+    cache: Cache<R::WeakForm>,
 }
-impl<R: Resource + Debug> Debug for Lease<R> {
+impl<W: Debug, R: Resource<WeakForm = W> + Debug> Debug for Lease<R> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Lease")
             .field("resource", &self.resource)
@@ -23,8 +23,7 @@ impl<R: Resource + Debug> Debug for Lease<R> {
 
 impl<R: Resource> Drop for Lease<R> {
     fn drop(&mut self) {
-        let mut resource = self.resource.take().unwrap();
-        resource.clear();
+        let resource = self.resource.take().unwrap().clear();
         self.cache.lock().unwrap().push(resource);
     }
 }
@@ -43,7 +42,7 @@ impl<R: Resource> DerefMut for Lease<R> {
 }
 
 pub struct HashPool<R: Resource> {
-    pub resources: HashMap<R::Info, Cache<R>>,
+    pub resources: HashMap<R::Info, Cache<R::WeakForm>>,
 }
 impl<R: Resource> Default for HashPool<R> {
     fn default() -> Self {
@@ -53,10 +52,11 @@ impl<R: Resource> Default for HashPool<R> {
     }
 }
 
-impl<I, R> Debug for HashPool<R>
+impl<I, W, R> Debug for HashPool<R>
 where
     I: Debug,
-    R: Resource<Info = I> + Debug,
+    W: Debug,
+    R: Resource<Info = I, WeakForm = W>,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("HashPool")
@@ -81,6 +81,7 @@ where
             .lock()
             .unwrap()
             .pop()
+            .map(|weak| R::upgrade(weak, &info, &ctx))
             .unwrap_or_else(|| R::create(&info, &ctx));
 
         Lease {
@@ -103,7 +104,7 @@ where
             .lock()
             .unwrap()
             .pop()
-            .map(|r| Ok(r))
+            .map(|weak| Ok(R::upgrade(weak, &info, &ctx)))
             .unwrap_or_else(|| R::try_create(&info, &ctx))?;
 
         Ok(Lease {
