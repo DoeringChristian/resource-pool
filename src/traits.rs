@@ -2,7 +2,7 @@ use std::error::Error;
 use std::ops::{Deref, DerefMut};
 
 pub trait Pool<R: Resource> {
-    type Lease: Deref<Target = R> + DerefMut<Target = R>;
+    type Lease;
 
     /// Leases a resource from the pool
     ///
