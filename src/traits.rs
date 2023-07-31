@@ -7,7 +7,11 @@ pub trait Pool<R: Resource, I: Info<R>> {
     ///
     /// * `info`: information passed to `Resource::create`
     /// * `ctx`: context passed to `Resource::create`
-    fn lease(&mut self, info: &I, ctx: &I::Context) -> Self::Lease;
+    fn lease(&mut self, info: &I, ctx: &I::Context) -> Self::Lease {
+        self.try_lease(info, ctx).unwrap()
+    }
+
+    fn try_lease(&mut self, info: &I, ctx: &I::Context) -> Option<Self::Lease>;
 }
 // pub trait TryPool<R: TryResource>: Pool<R> {
 //     fn try_lease(&mut self, info: &R::Info, ctx: &R::Context) -> Result<Self::Lease, R::Error>;
@@ -23,7 +27,9 @@ pub trait Info<R: Resource>: Eq + PartialEq + Clone {
     fn try_create(info: &Self, ctx: &Self::Context) -> Option<R>;
 }
 
-pub trait Resource {}
+pub trait Resource {
+    fn clear(&mut self);
+}
 
 // pub trait Resource {
 //     type Info: Eq + PartialEq + Clone;

@@ -42,10 +42,10 @@ impl<R: Resource> DerefMut for Lease<R> {
     }
 }
 
-pub struct HashPool<R: Resource, I: Info<R>> {
+pub struct HashPool<I, R> {
     pub resources: HashMap<I, Cache<R>>,
 }
-impl<R: Resource, I: Info<R>> Default for HashPool<R, I> {
+impl<R: Resource, I: Info<R>> Default for HashPool<I, R> {
     fn default() -> Self {
         Self {
             resources: Default::default(),
@@ -53,7 +53,7 @@ impl<R: Resource, I: Info<R>> Default for HashPool<R, I> {
     }
 }
 
-impl<I, R> Debug for HashPool<R, I>
+impl<I, R> Debug for HashPool<I, R>
 where
     R: Resource + Debug,
     I: Info<R> + Debug,
@@ -65,14 +65,14 @@ where
     }
 }
 
-impl<I, R> Pool<R, I> for HashPool<R, I>
+impl<I, R> Pool<R, I> for HashPool<I, R>
 where
-    I: Hash + Eq + PartialEq + Clone,
-    R: Resource<Info = I>,
+    R: Resource,
+    I: Info<R> + Hash + Eq + PartialEq + Clone,
 {
     type Lease = Lease<R>;
 
-    fn lease(&mut self, info: &R::Info, ctx: &R::Context) -> Self::Lease {
+    fn try_lease(&mut self, info: &I, ctx: &I::Context) -> Option<Self::Lease> {
         let cache = self
             .resources
             .entry(info.clone())
@@ -81,32 +81,10 @@ where
             .lock()
             .unwrap()
             .pop()
-            .unwrap_or_else(|| R::create(&info, &ctx));
+            .map(|r| Some(r))
+            .unwrap_or_else(|| I::try_create(&info, &ctx))?;
 
-        Lease {
-            resource: Some(resource),
-            cache: cache.clone(),
-        }
-    }
-}
-impl<I, R> TryPool<R> for HashPool<R>
-where
-    I: Hash + Eq + PartialEq + Clone,
-    R: TryResource<Info = I>,
-{
-    fn try_lease(&mut self, info: &R::Info, ctx: &R::Context) -> Result<Self::Lease, R::Error> {
-        let cache = self
-            .resources
-            .entry(info.clone())
-            .or_insert(Arc::new(Mutex::new(Vec::with_capacity(1))));
-        let resource = cache
-            .lock()
-            .unwrap()
-            .pop()
-            .map(|r| Ok(r))
-            .unwrap_or_else(|| R::try_create(&info, &ctx))?;
-
-        Ok(Lease {
+        Some(Lease {
             resource: Some(resource),
             cache: cache.clone(),
         })

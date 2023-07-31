@@ -20,11 +20,15 @@ impl<'a> Info<Buffer> for BufferInfo<'a> {
     }
 }
 
-impl Resource for Buffer {}
+impl Resource for Buffer {
+    fn clear(&mut self) {
+        self.data.clear()
+    }
+}
 
 #[test]
 fn hash_pool_lease() {
-    let mut pool = hashpool::HashPool::<Buffer>::default();
+    let mut pool = hashpool::HashPool::<BufferInfo, Buffer>::default();
 
     let b1 = pool.lease(
         &BufferInfo {
