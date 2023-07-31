@@ -14,10 +14,10 @@ impl<'a> Info for BufferInfo<'a> {
     type Context = ();
     type Resource = Buffer;
 
-    fn try_create(info: &Self, ctx: &Self::Context) -> Option<Buffer> {
-        Some(Buffer {
+    fn create(info: &Self, ctx: &Self::Context) -> Buffer {
+        Buffer {
             data: Vec::with_capacity(info.cap),
-        })
+        }
     }
 }
 

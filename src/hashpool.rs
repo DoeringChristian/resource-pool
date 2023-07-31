@@ -71,7 +71,7 @@ where
 {
     type Lease = Lease<I::Resource>;
 
-    fn try_lease(&mut self, info: &I, ctx: &I::Context) -> Option<Self::Lease> {
+    fn lease(&mut self, info: &I, ctx: &I::Context) -> Self::Lease {
         let cache = self
             .resources
             .entry(info.clone())
@@ -80,10 +80,32 @@ where
             .lock()
             .unwrap()
             .pop()
-            .map(|r| Some(r))
+            .unwrap_or_else(|| I::create(&info, &ctx));
+
+        Lease {
+            resource: Some(resource),
+            cache: cache.clone(),
+        }
+    }
+}
+
+impl<I> TryPool<I> for HashPool<I>
+where
+    I: TryInfo + Hash + Eq + PartialEq + Clone,
+{
+    fn try_lease(&mut self, info: &I, ctx: &<I>::Context) -> Result<Self::Lease, I::Error> {
+        let cache = self
+            .resources
+            .entry(info.clone())
+            .or_insert(Arc::new(Mutex::new(Vec::with_capacity(1))));
+        let resource = cache
+            .lock()
+            .unwrap()
+            .pop()
+            .map(|r| Ok(r))
             .unwrap_or_else(|| I::try_create(&info, &ctx))?;
 
-        Some(Lease {
+        Ok(Lease {
             resource: Some(resource),
             cache: cache.clone(),
         })
