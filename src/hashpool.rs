@@ -42,10 +42,10 @@ impl<R: Resource> DerefMut for Lease<R> {
     }
 }
 
-pub struct HashPool<R: Resource> {
-    pub resources: HashMap<R::Info, Cache<R>>,
+pub struct HashPool<R: Resource, I: Info<R>> {
+    pub resources: HashMap<I, Cache<R>>,
 }
-impl<R: Resource> Default for HashPool<R> {
+impl<R: Resource, I: Info<R>> Default for HashPool<R, I> {
     fn default() -> Self {
         Self {
             resources: Default::default(),
@@ -53,10 +53,10 @@ impl<R: Resource> Default for HashPool<R> {
     }
 }
 
-impl<I, R> Debug for HashPool<R>
+impl<I, R> Debug for HashPool<R, I>
 where
-    I: Debug,
-    R: Resource<Info = I> + Debug,
+    R: Resource + Debug,
+    I: Info<R> + Debug,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("HashPool")
@@ -65,7 +65,7 @@ where
     }
 }
 
-impl<I, R> Pool<R> for HashPool<R>
+impl<I, R> Pool<R, I> for HashPool<R, I>
 where
     I: Hash + Eq + PartialEq + Clone,
     R: Resource<Info = I>,
