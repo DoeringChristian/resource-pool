@@ -10,8 +10,9 @@ struct BufferInfo<'a> {
     shape: &'a [usize],
 }
 
-impl<'a> Info<Buffer> for BufferInfo<'a> {
+impl<'a> Info for BufferInfo<'a> {
     type Context = ();
+    type Resource = Buffer;
 
     fn try_create(info: &Self, ctx: &Self::Context) -> Option<Buffer> {
         Some(Buffer {
@@ -28,7 +29,7 @@ impl Resource for Buffer {
 
 #[test]
 fn hash_pool_lease() {
-    let mut pool = hashpool::HashPool::<BufferInfo, Buffer>::default();
+    let mut pool = hashpool::HashPool::<BufferInfo>::default();
 
     let b1 = pool.lease(
         &BufferInfo {

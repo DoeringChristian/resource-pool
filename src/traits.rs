@@ -1,6 +1,6 @@
 use std::error::Error;
 
-pub trait Pool<R: Resource, I: Info<R>> {
+pub trait Pool<I: Info> {
     type Lease;
 
     /// Leases a resource from the pool, panics if the resource could not be created.
@@ -19,10 +19,11 @@ pub trait Pool<R: Resource, I: Info<R>> {
     fn try_lease(&mut self, info: &I, ctx: &I::Context) -> Option<Self::Lease>;
 }
 
-pub trait Info<R: Resource>: Eq + PartialEq + Clone {
+pub trait Info: Eq + PartialEq + Clone {
     type Context;
+    type Resource: Resource;
 
-    fn try_create(info: &Self, ctx: &Self::Context) -> Option<R>;
+    fn try_create(info: &Self, ctx: &Self::Context) -> Option<Self::Resource>;
 }
 
 pub trait Resource {
